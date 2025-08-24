@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌟 虹靈御所 - 離線模式</title>
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --background-color: #1e1b4b;
+            --text-color: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .offline-container {
+            max-width: 600px;
+            padding: 2rem;
+        }
+
+        .offline-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .retry-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .retry-btn:hover {
+            background: #5856eb;
+            transform: translateY(-2px);
+        }
+
+        .features-list {
+            margin-top: 2rem;
+            text-align: left;
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .features-list h3 {
+            margin-top: 0;
+            text-align: center;
+        }
+
+        .features-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .features-list li:last-child {
+            border-bottom: none;
+        }
+
+        .features-list li::before {
+            content: '✨';
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            p { font-size: 1rem; }
+            .offline-container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">🌙</div>
+        <h1>暫時無法連線</h1>
+        <p>
+            目前無法連接到虹靈御所的服務器，但您的星空指引永遠在那裡等待。<br>
+            請檢查網路連線狀態，或稍後再試。
+        </p>
+
+        <button class="retry-btn" onclick="location.reload()">
+            🔄 重新連線
+        </button>
+
+        <button class="retry-btn" onclick="goHome()">
+            🏠 返回首頁
+        </button>
+
+        <div class="features-list">
+            <h3>📱 離線功能</h3>
+            <ul>
+                <li>查看已生成的角色資料</li>
+                <li>瀏覽占星知識庫</li>
+                <li>使用離線計算工具</li>
+                <li>保存您的個人設定</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function goHome() {
+            window.location.href = '/';
+        }
+
+        // 定期檢查網路狀態
+        function checkOnlineStatus() {
+            if (navigator.onLine) {
+                console.log('網路已恢復，準備重新載入...');
+                location.reload();
+            }
+        }
+
+        // 監聽網路狀態變化
+        window.addEventListener('online', checkOnlineStatus);
+
+        // 每30秒檢查一次
+        setInterval(checkOnlineStatus, 30000);
+
+        console.log('🌟 虹靈御所離線頁面已載入');
+        console.log('網路狀態:', navigator.onLine ? '在線' : '離線');
+    </script>
+</body>
+</html>

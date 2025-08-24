@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="虹靈御所占星主角生成系統 - 基於真實天文計算的D&D角色生成器">
+    <meta name="keywords" content="占星, D&D, 角色生成, 星盤, 占星學, 角色扮演">
+    <meta name="author" content="虹靈御所">
+
+    <!-- PWA相關meta標籤 -->
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="虹靈御所">
+
+    <title>🌟 虹靈御所占星主角生成系統</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./site.webmanifest">
+
+    <!-- 圖標配置 -->
+    <link rel="icon" type="image/x-icon" href="./favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16x16.png">
+
+    <!-- 預載入關鍵資源 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" as="style">
+
+    <style>
+        /* 關鍵CSS內聯以提升載入速度 */
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #06b6d4;
+            --background-color: #1e1b4b;
+            --surface-color: #312e81;
+            --text-color: #ffffff;
+            --error-color: #ef4444;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem 0;
+        }
+
+        .header h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(30, 27, 75, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--surface-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--error-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            max-width: 400px;
+        }
+
+        .error-toast.show {
+            transform: translateX(0);
+        }
+
+        .success-toast {
+            background: var(--success-color);
+        }
+
+        .warning-toast {
+            background: var(--warning-color);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .error-toast {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 載入中覆蓋層 -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <div id="loading-text">正在載入...</div>
+    </div>
+
+    <!-- 錯誤提示Toast -->
+    <div id="error-toast" class="error-toast" style="display: none;">
+        <div id="toast-message">發生錯誤</div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <h1>🌟 虹靈御所占星主角生成系統</h1>
+            <p>基於真實天文計算的D&D角色生成器</p>
+        </header>
+
+        <main>
+            <!-- 系統狀態顯示 -->
+            <div id="system-status" class="system-status">
+                <p>🔧 計算引擎: <span id="engine-status">檢查中...</span></p>
+                <p>📡 API狀態: <span id="api-status">連接中...</span></p>
+                <p>📱 PWA狀態: <span id="pwa-status">初始化中...</span></p>
+            </div>
+
+            <!-- 原有的表單內容會在這裡... -->
+            <div id="main-content">
+                <p style="text-align: center; padding: 2rem;">
+                    系統正在初始化，請稍候...
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 外部字體載入 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap">
+
+    <script>
+        // 🌟 虹靈御所前端核心 JavaScript
+
+        // 全域配置
+        window.RAINBOW_SPIRIT_CONFIG = {
+            API_BASE_URL: location.hostname === 'localhost' || location.hostname === '127.0.0.1' 
+                ? 'http://localhost:5000' 
+                : 'https://rainbow-spirit-api.railway.app',
+            DEBUG: location.hostname === 'localhost',
+            VERSION: '1.1.0',
+            PWA_ENABLED: true
+        };
+
+        // 全域錯誤處理
+        window.addEventListener('error', function(event) {
+            console.error('全域錯誤:', event.error);
+            showToast('系統發生錯誤，請重新整理頁面', 'error');
+            if (window.RAINBOW_SPIRIT_CONFIG.DEBUG) {
+                console.error('錯誤詳情:', event.error);
+            }
+        });
+
+        // Promise拒絕處理
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('未處理的Promise拒絕:', event.reason);
+            showToast('網路請求失敗，請檢查連線狀態', 'error');
+            event.preventDefault();
+        });
+
+        // 工具函數
+        const Utils = {
+            // 顯示載入狀態
+            showLoading(message = '載入中...') {
+                const overlay = document.getElementById('loading-overlay');
+                const text = document.getElementById('loading-text');
+                text.textContent = message;
+                overlay.style.display = 'flex';
+            },
+
+            hideLoading() {
+                const overlay = document.getElementById('loading-overlay');
+                overlay.style.display = 'none';
+            },
+
+            // API請求封裝
+            async apiRequest(endpoint, options = {}) {
+                const url = window.RAINBOW_SPIRIT_CONFIG.API_BASE_URL + endpoint;
+                const defaultOptions = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    timeout: 15000
+                };
+
+                const mergedOptions = { ...defaultOptions, ...options };
+
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), mergedOptions.timeout);
+
+                    const response = await fetch(url, {
+                        ...mergedOptions,
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    return await response.json();
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        throw new Error('請求超時，請檢查網路連線');
+                    }
+                    throw error;
+                }
+            }
+        };
+
+        // Toast通知系統
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById('error-toast');
+            const messageElement = document.getElementById('toast-message');
+
+            // 移除舊的類別
+            toast.classList.remove('error-toast', 'success-toast', 'warning-toast');
+
+            // 添加新的類別
+            if (type === 'success') {
+                toast.classList.add('success-toast');
+            } else if (type === 'warning') {
+                toast.classList.add('warning-toast');
+            } else {
+                toast.classList.add('error-toast');
+            }
+
+            messageElement.textContent = message;
+            toast.style.display = 'block';
+
+            // 顯示動畫
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // 自動隱藏
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.style.display = 'none', 300);
+            }, 5000);
+        }
+
+        // Service Worker 註冊
+        async function registerServiceWorker() {
+            if (!('serviceWorker' in navigator)) {
+                console.log('此瀏覽器不支援Service Worker');
+                updatePWAStatus('不支援');
+                return false;
+            }
+
+            try {
+                console.log('🔧 註冊Service Worker...');
+                const registration = await navigator.serviceWorker.register('./service_worker.js', {
+                    scope: './'
+                });
+
+                console.log('✅ Service Worker註冊成功:', registration);
+
+                // 監聽SW狀態變化
+                registration.addEventListener('updatefound', () => {
+                    console.log('🔄 發現Service Worker更新');
+                    const newWorker = registration.installing;
+
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            showToast('應用程式已更新，重新整理以獲得最新版本', 'success');
+                        }
+                    });
+                });
+
+                updatePWAStatus('已啟用');
+                return true;
+
+            } catch (error) {
+                console.error('❌ Service Worker註冊失敗:', error);
+                updatePWAStatus('註冊失敗');
+                return false;
+            }
+        }
+
+        // 系統狀態更新
+        function updateEngineStatus(status) {
+            const element = document.getElementById('engine-status');
+            element.textContent = status;
+        }
+
+        function updateAPIStatus(status) {
+            const element = document.getElementById('api-status');
+            element.textContent = status;
+        }
+
+        function updatePWAStatus(status) {
+            const element = document.getElementById('pwa-status');
+            element.textContent = status;
+        }
+
+        // 系統初始化
+        async function initializeSystem() {
+            try {
+                Utils.showLoading('正在初始化系統...');
+
+                // 1. 註冊Service Worker
+                const swRegistered = await registerServiceWorker();
+
+                // 2. 檢查API狀態
+                Utils.showLoading('檢查API狀態...');
+                try {
+                    const healthCheck = await Utils.apiRequest('/api/health');
+                    updateAPIStatus('✅ 正常');
+                    updateEngineStatus(healthCheck.engine || '未知');
+                } catch (error) {
+                    console.error('API健康檢查失敗:', error);
+                    updateAPIStatus('❌ 連線失敗');
+                    updateEngineStatus('無法連接');
+                    showToast('API服務無法連接，部分功能可能受限', 'warning');
+                }
+
+                // 3. 載入主要內容
+                Utils.showLoading('載入主要內容...');
+                await loadMainContent();
+
+                Utils.hideLoading();
+                showToast('系統初始化完成', 'success');
+
+            } catch (error) {
+                console.error('系統初始化失敗:', error);
+                Utils.hideLoading();
+                showToast('系統初始化失敗，請重新整理頁面', 'error');
+            }
+        }
+
+        // 載入主要內容
+        async function loadMainContent() {
+            const mainContent = document.getElementById('main-content');
+
+            // 這裡會載入原本的表單內容
+            mainContent.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <h2>🎲 角色生成器</h2>
+                    <p>請輸入您的出生資訊以生成專屬的D&D角色</p>
+                    <br>
+                    <form id="character-form">
+                        <div class="form-group">
+                            <label for="name">姓名：</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <!-- 其他表單欄位會在這裡添加... -->
+                        <button type="submit">生成角色</button>
+                    </form>
+                </div>
+            `;
+
+            // 綁定表單事件
+            const form = document.getElementById('character-form');
+            form.addEventListener('submit', handleFormSubmit);
+        }
+
+        // 表單提交處理
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+
+            try {
+                Utils.showLoading('正在生成您的專屬角色...');
+
+                const formData = new FormData(event.target);
+                const data = Object.fromEntries(formData);
+
+                const result = await Utils.apiRequest('/api/calculate_chart', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+
+                Utils.hideLoading();
+                showToast('角色生成成功！', 'success');
+                displayCharacterResult(result);
+
+            } catch (error) {
+                console.error('角色生成失敗:', error);
+                Utils.hideLoading();
+                showToast('角色生成失敗：' + error.message, 'error');
+            }
+        }
+
+        // 顯示角色結果
+        function displayCharacterResult(result) {
+            // 實作角色結果顯示邏輯
+            console.log('角色生成結果:', result);
+        }
+
+        // 頁面載入完成後初始化
+        document.addEventListener('DOMContentLoaded', initializeSystem);
+
+        // PWA安裝提示
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // 顯示安裝按鈕或提示
+            setTimeout(() => {
+                showToast('可以將此應用安裝到您的裝置上！', 'success');
+            }, 5000);
+        });
+
+        // 安裝PWA
+        async function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('PWA安裝結果:', outcome);
+                deferredPrompt = null;
+            }
+        }
+
+        console.log('🌟 虹靈御所占星系統已載入 v' + window.RAINBOW_SPIRIT_CONFIG.VERSION);
+
+    </script>
+</body>
+</html>
