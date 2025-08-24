@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虹靈御所占星主角生成系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        
+        .star:nth-child(odd) {
+            animation-delay: 1s;
+        }
+        
+        .star:nth-child(3n) {
+            animation-delay: 2s;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 overflow-x-hidden">
+    <!-- 星空背景 -->
+    <div id="stars" class="fixed inset-0 pointer-events-none opacity-20"></div>
+    
+    <div class="relative z-10 container mx-auto px-4 py-8">
+        <!-- 標題區域 -->
+        <div class="text-center mb-12">
+            <div class="flex items-center justify-center mb-4">
+                <span class="text-4xl mr-2">✨</span>
+                <h1 class="text-4xl md:text-6xl font-bold bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 bg-clip-text text-transparent">
+                    虹靈御所
+                </h1>
+                <span class="text-4xl ml-2">✨</span>
+            </div>
+            <p class="text-xl text-purple-200 mb-2">占星主角生成系統</p>
+            <p class="text-sm text-purple-300">基於真實天文計算的D&D角色生成器</p>
+            <div class="mt-4 flex items-center justify-center space-x-4">
+                <div id="api-status" class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                    <span class="text-purple-300 text-sm">檢查API狀態中...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- 輸入表單 -->
+            <div class="bg-white/10 backdrop-blur-md border border-purple-500/30 rounded-lg p-6">
+                <div class="mb-6">
+                    <h2 class="text-white text-xl font-semibold mb-2 flex items-center">
+                        🎭 角色生成設定
+                    </h2>
+                    <p class="text-purple-200 text-sm">請輸入您的出生資訊以生成專屬的D&D角色</p>
+                </div>
+                
+                <form id="astro-form" class="space-y-4">
+                    <div>
+                        <label class="block text-white text-sm font-medium mb-2">角色名稱</label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            required
+                            placeholder="請輸入角色名稱"
+                            class="w-full px-3 py-2 bg-white/20 border border-purple-400/50 rounded-md text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        >
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">出生年</label>
+                            <input 
+                                type="number" 
+                                id="year" 
+                                name="year" 
+                                value="1985"
+                                required
+                                class="w-full px-3 py-2 bg-white/20 border border-purple-400/50 rounded-md text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">月</label>
+                            <input 
+                                type="number" 
+                                id="month" 
+                                name="month" 
+                                value="10"
+                                min="1" 
+                                max="12"
+                                required
+                                class="w-full px-3 py-2 bg-white/20 border border-purple-400/50 rounded-md text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">日</label>
+                            <input 
+                                type="number" 
+                                id="day" 
+                                name="day" 
+                                value="6"
+                                min="1" 
+                                max="31"
+                                required
+                                class="w-full px-3 py-2 bg-white/20 border border-purple-400/50 rounded-md text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">時</label>
+                            <input 
+                                type="number" 
+                                id="hour" 
+                                name="hour" 
+                                value="19"
+                                min="0" 
+                                max="23"
+                                required
+                                class="w-full px-3 py-2 bg-white/20 border border-purple-400/50 rounded-md text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">分</label>
+                            <input 
+                                type="number" 
+                                id="minute" 
+                                name="minute" 
+                                value="30"
+                                min="0" 
+                                max="59"
+                                required
+                                class="w-full px-3 py-2 bg-white/20 border border-purple-400/50 rounded-md text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-white text-sm font-medium mb-2">出生地點</label>
+                        <input 
+                            type="text" 
+                            id="city" 
+                            name="city" 
+                            value="台北"
+                            required
+                            class="w-full px-3 py-2 bg-white/20 border border-purple-400/50 rounded-md text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        >
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">經度</label>
+                            <input 
+                                type="number" 
+                                id="longitude" 
+                                name="longitude" 
+                                value="121.55"
+                                step="0.01"
+                                required
+                                class="w-full px-3 py-2 bg-white/20 border border-purple-400/50 rounded-md text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-white text-sm font-medium mb-2">緯度</label>
+                            <input 
+                                type="number" 
+                                id="latitude" 
+                                name="latitude" 
+                                value="25.017"
+                                step="0.01"
+                                required
+                                class="w-full px-3 py-2 bg-white/20 border border-purple-400/50 rounded-md text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                        </div>
+                    </div>
+
+                    <div id="error-message" class="hidden p-3 bg-red-500/20 border border-red-500/50 rounded-md">
+                        <p class="text-red-200 text-sm"></p>
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        id="generate-btn"
+                        class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-4 rounded-md transition-all duration-200 flex items-center justify-center space-x-2"
+                    >
+                        <span>⭐</span>
+                        <span>生成角色</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 結果顯示 */
+            <div id="result-area" class="space-y-6">
+                <div class="bg-white/10 backdrop-blur-md border border-purple-500/30 rounded-lg p-6">
+                    <div class="flex flex-col items-center justify-center py-12">
+                        <div class="text-6xl mb-4">🌟</div>
+                        <p class="text-purple-200 text-center mb-2">
+                            請填寫左側表單以生成您的專屬D&D角色
+                        </p>
+                        <p class="text-purple-300 text-sm text-center">
+                            系統將使用真實的天文計算引擎<br/>
+                            為您計算精確的星盤位置
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API配置
+        const API_BASE = 'https://star-production-e943.up.railway.app';
+        
+        // 生成星空背景
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // 檢查API狀態
+        async function checkApiStatus() {
+            const statusElement = document.getElementById('api-status');
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                if (response.ok) {
+                    const data = await response.json();
+                    statusElement.innerHTML = `
+                        <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                        <span class="text-green-300 text-sm">API運行正常 (${data.engine || '未知引擎'})</span>
+                    `;
+                } else {
+                    throw new Error('API響應錯誤');
+                }
+            } catch (error) {
+                statusElement.innerHTML = `
+                    <div class="w-3 h-3 bg-red-400 rounded-full"></div>
+                    <span class="text-red-300 text-sm">API連接失敗</span>
+                `;
+                console.error('API狀態檢查失敗:', error);
+            }
+        }
+
+        // 顯示錯誤信息
+        function showError(message) {
+            const errorElement = document.getElementById('error-message');
+            errorElement.querySelector('p').textContent = message;
+            errorElement.classList.remove('hidden');
+        }
+
+        // 隱藏錯誤信息
+        function hideError() {
+            document.getElementById('error-message').classList.add('hidden');
+        }
+
+        // 顯示載入狀態
+        function setLoading(loading) {
+            const btn = document.getElementById('generate-btn');
+            if (loading) {
+                btn.innerHTML = `
+                    <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>計算中...</span>
+                `;
+                btn.disabled = true;
+            } else {
+                btn.innerHTML = `
+                    <span>⭐</span>
+                    <span>生成角色</span>
+                `;
+                btn.disabled = false;
+            }
+        }
+
+        // 獲取評級顏色
+        function getRatingColor(rating) {
+            const colors = {
+                'SS': 'from-purple-500 to-pink-500',
+                'S': 'from-yellow-400 to-orange-500',
+                'A': 'from-green-400 to-blue-500',
+                'B': 'from-blue-400 to-indigo-500',
+                'C': 'from-gray-400 to-gray-600',
+                'D': 'from-red-400 to-red-600'
+            };
+            return colors[rating] || 'from-gray-400 to-gray-600';
+        }
+
+        // 顯示結果
+        function displayResult(data) {
+            const resultArea = document.getElementById('result-area');
+            const character = data.dnd_character;
+            const chart = data.birth_chart;
+
+            let planetsHtml = '';
+            if (chart && chart.planets) {
+                planetsHtml = Object.entries(chart.planets).map(([key, planet]) => `
+                    <div class="flex items-center justify-between bg-white/10 rounded-lg p-3">
+                        <div class="flex items-center">
+                            <div class="w-2 h-2 bg-yellow-400 rounded-full mr-2"></div>
+                            <span class="text-white text-sm">${planet.name}</span>
+                            ${planet.retrograde ? '<span class="text-red-400 text-xs ml-1">℞</span>' : ''}
+                        </div>
+                        <div class="text-right">
+                            <div class="text-purple-200 text-sm">${planet.sign}</div>
+                            <div class="text-purple-300 text-xs">${planet.position}° (第${planet.house}宮)</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            let statsHtml = '';
+            if (character.stats) {
+                const statNames = {
+                    strength: '力量',
+                    dexterity: '敏捷',
+                    constitution: '體質',
+                    intelligence: '智力',
+                    wisdom: '智慧',
+                    charisma: '魅力'
+                };
+                
+                statsHtml = Object.entries(character.stats).map(([stat, value]) => `
+                    <div class="flex items-center justify-between bg-white/10 rounded-lg p-3">
+                        <span class="text-white text-sm">${statNames[stat] || stat}</span>
+                        <span class="text-yellow-400 font-bold">${value}</span>
+                    </div>
+                `).join('');
+            }
+
+            let skillsHtml = '';
+            if (character.skills) {
+                skillsHtml = character.skills.map(skill => 
+                    `<span class="inline-block bg-purple-600/50 text-purple-100 px-2 py-1 rounded text-xs mr-2 mb-2">${skill}</span>`
+                ).join('');
+            }
+
+           resultArea.innerHTML = `
+    <!-- D&D角色卡片 -->
+    <div class="bg-white/10 backdrop-blur-md border border-purple-500/30 rounded-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-white text-xl font-semibold flex items-center">
+                🛡️ ${character.name}
+            </h3>
+                        <span class="bg-gradient-to-r ${getRatingColor(character.rating)} text-white font-bold px-3 py-1 rounded-full text-sm">
+                            ${character.rating}級
+                        </span>
+                    </div>
+                    <p class="text-purple-200 mb-4">
+                        ${character.class?.name} - ${character.class?.description}
+                    </p>
+
+                    ${statsHtml ? `
+                        <div class="mb-4">
+                            <h4 class="text-white font-semibold mb-3">角色屬性</h4>
+                            <div class="grid grid-cols-2 gap-3 mb-2">
+                                ${statsHtml}
+                            </div>
+                            <div class="text-center">
+                                <span class="text-purple-300 text-sm">
+                                    總和: ${character.total_stats || Object.values(character.stats).reduce((a, b) => a + b, 0)}
+                                </span>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${skillsHtml ? `
+                        <div class="mb-4">
+                            <h4 class="text-white font-semibold mb-3">專精技能</h4>
+                            <div>${skillsHtml}</div>
+                        </div>
+                    ` : ''}
+
+                    ${character.background ? `
+                        <div>
+                            <h4 class="text-white font-semibold mb-3">角色背景</h4>
+                            <div class="bg-white/10 border border-purple-400/50 rounded-md p-3 text-purple-100 text-sm leading-relaxed">
+                                ${character.background}
+                            </div>
+                            <p class="text-purple-300 text-xs mt-2">
+                                字數：${character.background.length} 字
+                            </p>
+                        </div>
+                    ` : ''}
+                </div>
+
+                ${planetsHtml ? `
+                    <!-- 星盤信息 -->
+                    <div class="bg-white/10 backdrop-blur-md border border-purple-500/30 rounded-lg p-6">
+                        <h3 class="text-white text-xl font-semibold mb-4 flex items-center">
+                            🌟 真實星盤配置
+                        </h3>
+                        <p class="text-purple-200 text-sm mb-4">基於天文計算的行星位置</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            ${planetsHtml}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        // 表單提交處理
+        document.getElementById('astro-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            hideError();
+            setLoading(true);
+
+            const formData = new FormData(e.target);
+            const data = {
+                name: formData.get('name'),
+                year: parseInt(formData.get('year')),
+                month: parseInt(formData.get('month')),
+                day: parseInt(formData.get('day')),
+                hour: parseInt(formData.get('hour')),
+                minute: parseInt(formData.get('minute')),
+                city: formData.get('city'),
+                longitude: parseFloat(formData.get('longitude')),
+                latitude: parseFloat(formData.get('latitude')),
+                timezone: 'Asia/Taipei'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/calculate_chart`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayResult(result.data);
+                } else {
+                    showError(result.error || '計算失敗');
+                }
+            } catch (error) {
+                console.error('請求錯誤:', error);
+                showError(`連接服務器失敗: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            createStars();
+            checkApiStatus();
+        });
+    </script>
+</body>
+</html>
+

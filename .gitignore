@@ -1,0 +1,39 @@
+# Node
+node_modules
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+
+# Editor / OS
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# Build
+dist
+dist-ssr
+
+# Env
+.env
+.env.*
+!.env.example
+
+# API 密鑰和敏感文件
+*.key
+*api-key*
+*secret*
+.env.local
+
+# Claude API 相關
+claude-api*.js
+anthropic-api*.js
+
+# Python 快取
+__pycache__/
+*.pyc
+
+# 前端構建文件
+# (保留原規則, 但 index.html 通常要提交；若仍需忽略可取消以下註解行)
+#index.html
