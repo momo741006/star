@@ -34,6 +34,12 @@ anthropic-api*.js
 __pycache__/
 *.pyc
 
+# Python logs and cache
+app.log
+*.log
+cache/
+*.sqlite
+
 # 前端構建文件
 # (保留原規則, 但 index.html 通常要提交；若仍需忽略可取消以下註解行)
 #index.html
