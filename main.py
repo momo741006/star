@@ -598,9 +598,88 @@ def calculate_with_real_engine(data):
 
 def calculate_with_backup_engine(data):
     """使用備用計算引擎"""
-    # 實作備用計算邏輯
-    # (這部分可以保持原有的備用邏輯)
-    pass
+    import random
+    
+    # 星座列表
+    ZODIAC_SIGNS = [
+        "白羊座", "金牛座", "雙子座", "巨蟹座", "獅子座", "處女座",
+        "天秤座", "天蠍座", "射手座", "摩羯座", "水瓶座", "雙魚座"
+    ]
+    
+    # 基於出生日期的基本星座判斷
+    month = int(data.get('month', 1))
+    day = int(data.get('day', 1))
+    
+    # 簡化的星座判斷
+    sun_sign_index = ((month - 1) + (day // 22)) % 12
+    sun_sign = ZODIAC_SIGNS[sun_sign_index]
+    
+    # 生成其他行星位置
+    planets = {
+        'sun': {'sign': sun_sign, 'degree': (day * 10) % 30, 'house': (month % 12) + 1},
+        'moon': {'sign': ZODIAC_SIGNS[(month + 4) % 12], 'degree': (day * 12) % 30, 'house': ((month + 4) % 12) + 1},
+        'mercury': {'sign': ZODIAC_SIGNS[(month + 1) % 12], 'degree': (day * 8) % 30, 'house': ((month + 1) % 12) + 1},
+        'venus': {'sign': ZODIAC_SIGNS[(month + 2) % 12], 'degree': (day * 15) % 30, 'house': ((month + 2) % 12) + 1},
+        'mars': {'sign': ZODIAC_SIGNS[(month + 6) % 12], 'degree': (day * 7) % 30, 'house': ((month + 6) % 12) + 1},
+    }
+    
+    # D&D職業選擇
+    dnd_classes = [
+        {"name": "聖騎士", "description": "正義的化身，以神聖之力守護盟友", "match_score": 0.85},
+        {"name": "法師", "description": "精通奧術的智者，操縱元素之力", "match_score": 0.82},
+        {"name": "盜賊", "description": "靈活的冒險家，擅長潛行與詭計", "match_score": 0.78},
+        {"name": "牧師", "description": "虔誠的治療者，神力的代行者", "match_score": 0.80},
+    ]
+    
+    # 基於星座選擇職業
+    class_choice = dnd_classes[sun_sign_index % len(dnd_classes)]
+    
+    # 屬性生成
+    stats = {}
+    for stat in ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']:
+        base_value = 8 + (hash(f"{stat}{data.get('name', 'default')}{month}{day}") % 11)
+        stats[stat] = base_value
+    
+    total_stats = sum(stats.values())
+    
+    # 評級
+    if total_stats >= 100:
+        rating = "SS"
+    elif total_stats >= 90:
+        rating = "S"
+    elif total_stats >= 80:
+        rating = "A"
+    elif total_stats >= 70:
+        rating = "B"
+    elif total_stats >= 60:
+        rating = "C"
+    else:
+        rating = "D"
+    
+    # 背景故事
+    name = data.get('name', '冒險者')
+    background = f"{name}是一位{class_choice['name']}，{class_choice['description']}。出生在{sun_sign}的影響下，展現出獨特的個性特質。從小就對冒險充滿渴望，踏上了成為英雄的道路。"
+    
+    return {
+        'success': True,
+        'character': {
+            'name': name,
+            'class': class_choice,
+            'stats': stats,
+            'total_stats': total_stats,
+            'rating': rating,
+            'background': background,
+            'birth_chart': {
+                'sun': f"{planets['sun']['sign']} 第{planets['sun']['house']}宮",
+                'moon': f"{planets['moon']['sign']} 第{planets['moon']['house']}宮",
+                'ascendant': ZODIAC_SIGNS[month % 12]
+            }
+        },
+        'astro_data': {
+            'planets': planets,
+            'houses': {f'house_{i}': ZODIAC_SIGNS[(i-1) % 12] for i in range(1, 13)}
+        }
+    }
 
 @app.route('/api/test')
 def test_system():
@@ -671,277 +750,4 @@ if __name__ == "__main__":
         )
     except Exception as e:
         logger.error(f"應用啟動失敗: {str(e)}")
-        sys.exit(1)    
-    # 基於星盤的屬性生成
-    stats = {}
-    for stat in ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']:
-        base_value = 8 + (hash(f"{stat}{data.get('name', 'default')}{month}{day}") % 11)
-        stats[stat] = base_value
-    
-    total_stats = sum(stats.values())
-    
-    # 評級
-    if total_stats >= 100:
-        rating = "SS"
-    elif total_stats >= 90:
-        rating = "S"
-    elif total_stats >= 80:
-        rating = "A"
-    elif total_stats >= 70:
-        rating = "B"
-    elif total_stats >= 60:
-        rating = "C"
-    else:
-        rating = "D"
-    
-    # 技能
-    all_skills = [
-        "運動", "欺瞞", "歷史", "洞察", "威嚇", "調查",
-        "醫療", "自然", "察覺", "表演", "說服", "宗教",
-        "巧手", "隱匿", "求生", "動物馴養", "奧秘", "特技"
-    ]
-    
-    skill_count = 3 + (hash(f"skills{data.get('name', 'default')}") % 4)
-    skills = random.sample(all_skills, skill_count)
-    
-    # 背景故事
-    name = data.get('name', '冒險者')
-    sun_sign = planets['sun']['sign']
-    
-    backgrounds = [
-        f"{name}是一位{class_choice['name']}，{class_choice['description']}。",
-        f"出生在{sun_sign}的影響下，{name}展現出獨特的個性特質。",
-        f"從小就對冒險充滿渴望，{name}踏上了成為英雄的道路。",
-        f"憑藉著{random.choice(['勇氣', '智慧', '魅力', '堅韌'])}，{name}在各種挑戰中脫穎而出。",
-        f"如今，{name}已經成為一位經驗豐富的冒險者，準備面對更大的挑戰。"
-    ]
-    
-    background = "".join(backgrounds)
-    
-    return {
-        'birth_chart': {
-            'planets': planets,
-            'houses': {f'house_{i}': ZODIAC_SIGNS[(i-1) % 12] for i in range(1, 13)}
-        },
-        'dnd_character': {
-            'name': name,
-            'class': class_choice,
-            'stats': stats,
-            'total_stats': total_stats,
-            'rating': rating,
-            'skills': skills,
-            'background': background
-        }
-    }
-
-@app.route('/')
-def index():
-    """主頁面"""
-    engine_info = "Kerykeion Swiss Ephemeris" if USE_REAL_ASTRO else "備用計算引擎"
-    
-    return render_template_string("""
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>虹靈御所占星系統 API</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #1a1a2e; color: #eee; }
-        .container { max-width: 800px; margin: 0 auto; }
-        h1 { color: #ffd700; text-align: center; }
-        .endpoint { background: #16213e; padding: 20px; margin: 20px 0; border-radius: 8px; }
-        .method { color: #4CAF50; font-weight: bold; }
-        .url { color: #2196F3; font-family: monospace; }
-        .description { margin: 10px 0; }
-        .example { background: #0f3460; padding: 10px; border-radius: 4px; margin: 10px 0; }
-        .status { background: #2d5a27; padding: 10px; border-radius: 4px; margin: 20px 0; }
-        pre { overflow-x: auto; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🌟 虹靈御所占星系統 API</h1>
-        
-        <div class="status">
-            <h3>🚀 系統狀態</h3>
-            <p><strong>計算引擎:</strong> {{ engine_info }}</p>
-            <p><strong>部署平台:</strong> Railway</p>
-            <p><strong>服務狀態:</strong> ✅ 運行中</p>
-        </div>
-        
-        <div class="endpoint">
-            <h3><span class="method">POST</span> <span class="url">/api/calculate_chart</span></h3>
-            <div class="description">計算完整星盤並生成D&D角色</div>
-            <div class="example">
-                <strong>請求參數:</strong>
-                <pre>{
-  "name": "角色名稱",
-  "year": 1985,
-  "month": 10,
-  "day": 6,
-  "hour": 19,
-  "minute": 30,
-  "city": "台北",
-  "longitude": 121.55,
-  "latitude": 25.017,
-  "timezone": "Asia/Taipei"
-}</pre>
-            </div>
-        </div>
-        
-        <div class="endpoint">
-            <h3><span class="method">GET</span> <span class="url">/api/health</span></h3>
-            <div class="description">檢查API健康狀態</div>
-        </div>
-        
-        <div class="endpoint">
-            <h3><span class="method">GET</span> <span class="url">/api/test</span></h3>
-            <div class="description">測試系統功能</div>
-        </div>
-        
-        <p style="text-align: center; margin-top: 40px; color: #888;">
-            Powered by Flask & Professional Astrology
-        </p>
-    </div>
-</body>
-</html>
-    """, engine_info=engine_info)
-
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    """健康檢查"""
-    return jsonify({
-        'status': 'healthy',
-        'message': '虹靈御所占星系統運行正常',
-        'version': '1.0.0',
-        'engine': 'Kerykeion Swiss Ephemeris' if USE_REAL_ASTRO else '備用計算引擎',
-        'platform': 'Railway',
-        'port': port
-    })
-
-@app.route('/api/calculate_chart', methods=['POST'])
-def calculate_chart():
-    """計算星盤並生成D&D角色"""
-    try:
-        data = request.get_json()
-        
-        # 驗證必要參數
-        required_fields = ['name', 'year', 'month', 'day', 'hour', 'minute']
-        
-        for field in required_fields:
-            if field not in data:
-                return jsonify({
-                    'success': False,
-                    'error': f'缺少必要參數: {field}'
-                }), 400
-        
-        print(f"🌟 計算星盤: {data['name']} - {data['year']}/{data['month']}/{data['day']} {data['hour']}:{data['minute']}")
-        
-        if USE_REAL_ASTRO:
-            # 使用真實占星計算
-            chart_data = astrologer.calculate_natal_chart(
-                name=data['name'],
-                year=int(data['year']),
-                month=int(data['month']),
-                day=int(data['day']),
-                hour=int(data['hour']),
-                minute=int(data['minute']),
-                city=data.get('city', '台北'),
-                longitude=float(data.get('longitude', 121.55)),
-                latitude=float(data.get('latitude', 25.017)),
-                timezone=data.get('timezone', 'Asia/Taipei')
-            )
-            
-            psychology = astrologer.analyze_chart_psychology(chart_data)
-            dnd_character = dnd_generator.generate_complete_character(chart_data)
-            
-            # 移除不能序列化的對象
-            if 'chart_object' in chart_data:
-                del chart_data['chart_object']
-            
-            result_data = {
-                'birth_chart': chart_data,
-                'psychological_analysis': psychology,
-                'dnd_character': dnd_character
-            }
-        else:
-            # 使用備用計算
-            result_data = backup_calculate_chart(data)
-        
-        print("✅ 計算完成")
-        
-        return jsonify({
-            'success': True,
-            'data': result_data,
-            'engine': 'real' if USE_REAL_ASTRO else 'backup'
-        })
-        
-    except Exception as e:
-        print(f"❌ 錯誤: {str(e)}")
-        print(f"📋 詳細錯誤: {traceback.format_exc()}")
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'traceback': traceback.format_exc()
-        }), 500
-
-@app.route('/api/test', methods=['GET'])
-def test_api():
-    """測試API功能"""
-    try:
-        # 使用測試數據
-        test_data = {
-            'name': '測試冒險者',
-            'year': 1985,
-            'month': 10,
-            'day': 6,
-            'hour': 19,
-            'minute': 30,
-            'city': '台北',
-            'longitude': 121.55,
-            'latitude': 25.017,
-            'timezone': 'Asia/Taipei'
-        }
-        
-        print("🧪 開始API測試...")
-        
-        if USE_REAL_ASTRO:
-            chart_data = astrologer.calculate_natal_chart(**test_data)
-            dnd_character = dnd_generator.generate_complete_character(chart_data)
-            
-            if 'chart_object' in chart_data:
-                del chart_data['chart_object']
-        else:
-            result = backup_calculate_chart(test_data)
-            dnd_character = result['dnd_character']
-        
-        print("✅ 測試完成")
-        
-        return jsonify({
-            'success': True,
-            'message': 'API測試成功',
-            'engine': 'real' if USE_REAL_ASTRO else 'backup',
-            'test_result': {
-                'character_name': dnd_character['name'],
-                'dnd_class': dnd_character['class']['name'],
-                'rating': dnd_character['rating'],
-                'total_stats': dnd_character.get('total_stats', 'N/A')
-            }
-        })
-        
-    except Exception as e:
-        print(f"❌ 測試失敗: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'traceback': traceback.format_exc()
-        }), 500
-
-if __name__ == '__main__':
-    print("🌟 啟動虹靈御所占星系統 API (Railway版)...")
-    print(f"📍 端口: {port}")
-    print(f"🔧 計算引擎: {'真實Kerykeion' if USE_REAL_ASTRO else '備用方案'}")
-    
-    app.run(host='0.0.0.0', port=port, debug=False)
-
+        sys.exit(1)
