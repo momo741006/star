@@ -1,0 +1,29 @@
+# Vercel Deployment - 忽略文件
+
+# 開發和測試文件
+*.log
+*.pyc
+__pycache__/
+.git/
+.github/
+
+# 壓縮文件
+*.zip
+
+# 備份文件
+*_updated.*
+main_enhanced.py
+
+# 構建腳本
+build_script.sh
+buildt.sh
+quick_deploy.sh
+
+# 其他平台配置
+railway.json
+Procfile
+
+# 文檔（可選，如果不需要在生產環境）
+enhanced_readme.md
+FIXES_SUMMARY.md
+淇京鍫卞憡.md

@@ -22,13 +22,12 @@ from flask_cors import CORS
 import json
 import traceback
 
-# 配置日誌
+# 配置日誌 - 僅使用 stdout，適配 serverless 環境
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('app.log') if os.path.exists('.') else logging.StreamHandler()
+        logging.StreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger(__name__)
