@@ -1,0 +1,13 @@
+2025-10-29 12:05:13,201 - __main__ - INFO - ✅ 真實占星計算引擎載入成功
+2025-10-29 12:05:13,203 - __main__ - INFO - 🌟 虹靈御所占星系統 v2.0 啟動中...
+2025-10-29 12:05:13,203 - __main__ - INFO - 🔧 計算引擎: Kerykeion Swiss Ephemeris v4.26.3
+2025-10-29 12:05:13,203 - __main__ - INFO - 🌐 端口: 5000
+2025-10-29 12:05:13,203 - __main__ - INFO - 📱 CORS: 已啟用
+2025-10-29 12:05:13,204 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.1.0.64:5000
+2025-10-29 12:05:13,204 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-29 12:05:15,458 - __main__ - INFO - API請求: GET /api/health - IP: 127.0.0.1
+2025-10-29 12:05:15,458 - __main__ - INFO - 健康檢查完成
+2025-10-29 12:05:15,459 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 12:05:15] "GET /api/health HTTP/1.1" 200 -

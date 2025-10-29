@@ -192,9 +192,11 @@
         window.RAINBOW_SPIRIT_CONFIG = {
             API_BASE_URL: location.hostname === 'localhost' || location.hostname === '127.0.0.1' 
                 ? 'http://localhost:5000' 
-                : 'https://rainbow-spirit-api.railway.app',
+                : (window.location.origin.includes('github.io') 
+                    ? 'https://star-production-9df4.up.railway.app'
+                    : window.location.origin),
             DEBUG: location.hostname === 'localhost',
-            VERSION: '1.1.0',
+            VERSION: '1.2.0',
             PWA_ENABLED: true
         };
 
@@ -391,20 +393,94 @@
         async function loadMainContent() {
             const mainContent = document.getElementById('main-content');
 
-            // 這裡會載入原本的表單內容
+            // 載入完整的表單內容
             mainContent.innerHTML = `
-                <div style="text-align: center; padding: 2rem;">
-                    <h2>🎲 角色生成器</h2>
-                    <p>請輸入您的出生資訊以生成專屬的D&D角色</p>
-                    <br>
-                    <form id="character-form">
+                <div style="max-width: 600px; margin: 0 auto; padding: 2rem; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <h2 style="text-align: center; margin-bottom: 2rem;">🎲 占星D&D角色生成器</h2>
+                    <p style="text-align: center; margin-bottom: 2rem; opacity: 0.9;">請輸入您的出生資訊以生成專屬的D&D角色</p>
+                    
+                    <form id="character-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
                         <div class="form-group">
-                            <label for="name">姓名：</label>
-                            <input type="text" id="name" name="name" required>
+                            <label for="name" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">姓名 *</label>
+                            <input type="text" id="name" name="name" required 
+                                   style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 1rem;"
+                                   placeholder="請輸入您的姓名">
                         </div>
-                        <!-- 其他表單欄位會在這裡添加... -->
-                        <button type="submit">生成角色</button>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="year" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">年份 *</label>
+                                <input type="number" id="year" name="year" required min="1900" max="2050" value="1990"
+                                       style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white;">
+                            </div>
+                            <div class="form-group">
+                                <label for="month" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">月份 *</label>
+                                <input type="number" id="month" name="month" required min="1" max="12" value="6"
+                                       style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white;">
+                            </div>
+                            <div class="form-group">
+                                <label for="day" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">日期 *</label>
+                                <input type="number" id="day" name="day" required min="1" max="31" value="15"
+                                       style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white;">
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="hour" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">時 *</label>
+                                <input type="number" id="hour" name="hour" required min="0" max="23" value="14"
+                                       style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white;">
+                            </div>
+                            <div class="form-group">
+                                <label for="minute" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">分 *</label>
+                                <input type="number" id="minute" name="minute" required min="0" max="59" value="30"
+                                       style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white;">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="city" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">出生城市 *</label>
+                            <input type="text" id="city" name="city" required value="台北"
+                                   style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 1rem;">
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="longitude" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">經度 *</label>
+                                <input type="number" id="longitude" name="longitude" required step="0.01" value="121.55"
+                                       style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white;">
+                            </div>
+                            <div class="form-group">
+                                <label for="latitude" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">緯度 *</label>
+                                <input type="number" id="latitude" name="latitude" required step="0.01" value="25.017"
+                                       style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white;">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="timezone" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">時區</label>
+                            <select id="timezone" name="timezone"
+                                    style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.2); color: white; font-size: 1rem;">
+                                <option value="Asia/Taipei">Asia/Taipei (台北)</option>
+                                <option value="Asia/Tokyo">Asia/Tokyo (東京)</option>
+                                <option value="Asia/Shanghai">Asia/Shanghai (上海)</option>
+                                <option value="Asia/Hong_Kong">Asia/Hong_Kong (香港)</option>
+                                <option value="America/New_York">America/New_York (紐約)</option>
+                                <option value="America/Los_Angeles">America/Los_Angeles (洛杉磯)</option>
+                                <option value="Europe/London">Europe/London (倫敦)</option>
+                                <option value="Europe/Paris">Europe/Paris (巴黎)</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" 
+                                style="width: 100%; padding: 1rem; font-size: 1.1rem; font-weight: 600; border-radius: 8px; border: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.4)';"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)';">
+                            🌟 生成我的專屬角色
+                        </button>
                     </form>
+                    
+                    <div id="result-container" style="margin-top: 2rem; display: none;"></div>
                 </div>
             `;
 
@@ -441,8 +517,95 @@
 
         // 顯示角色結果
         function displayCharacterResult(result) {
-            // 實作角色結果顯示邏輯
-            console.log('角色生成結果:', result);
+            const resultContainer = document.getElementById('result-container');
+            
+            if (!result || !result.character) {
+                resultContainer.innerHTML = '<p style="color: #ef4444;">無法顯示角色資訊</p>';
+                resultContainer.style.display = 'block';
+                return;
+            }
+            
+            const char = result.character;
+            const birthChart = char.birth_chart || {};
+            
+            resultContainer.innerHTML = `
+                <div style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 2rem; border: 2px solid rgba(255,255,255,0.2);">
+                    <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2rem;">✨ 您的專屬角色 ✨</h2>
+                    
+                    <!-- 角色基本資訊 -->
+                    <div style="background: rgba(102,126,234,0.3); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; color: #ffd700;">🎭 角色資訊</h3>
+                        <p style="font-size: 1.3rem; margin-bottom: 0.5rem;"><strong>姓名：</strong>${char.name}</p>
+                        <p style="font-size: 1.2rem; margin-bottom: 0.5rem;"><strong>職業：</strong>${char.class?.name || '未知'}</p>
+                        <p style="margin-bottom: 0.5rem;"><strong>職業描述：</strong>${char.class?.description || ''}</p>
+                        <p style="font-size: 1.5rem; margin-top: 1rem;"><strong>評級：</strong><span style="color: #ffd700; font-size: 2rem; font-weight: bold;">${char.rating}</span></p>
+                    </div>
+                    
+                    <!-- 屬性值 -->
+                    <div style="background: rgba(139,92,246,0.3); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; color: #ffd700;">📊 角色屬性</h3>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                                <div style="font-weight: 600; margin-bottom: 0.5rem;">💪 力量 (STR)</div>
+                                <div style="font-size: 1.5rem; color: #10b981;">${char.stats?.strength || 10}</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                                <div style="font-weight: 600; margin-bottom: 0.5rem;">🏃 敏捷 (DEX)</div>
+                                <div style="font-size: 1.5rem; color: #10b981;">${char.stats?.dexterity || 10}</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                                <div style="font-weight: 600; margin-bottom: 0.5rem;">❤️ 體質 (CON)</div>
+                                <div style="font-size: 1.5rem; color: #10b981;">${char.stats?.constitution || 10}</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                                <div style="font-weight: 600; margin-bottom: 0.5rem;">🧠 智力 (INT)</div>
+                                <div style="font-size: 1.5rem; color: #10b981;">${char.stats?.intelligence || 10}</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                                <div style="font-weight: 600; margin-bottom: 0.5rem;">🔮 智慧 (WIS)</div>
+                                <div style="font-size: 1.5rem; color: #10b981;">${char.stats?.wisdom || 10}</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                                <div style="font-weight: 600; margin-bottom: 0.5rem;">✨ 魅力 (CHA)</div>
+                                <div style="font-size: 1.5rem; color: #10b981;">${char.stats?.charisma || 10}</div>
+                            </div>
+                        </div>
+                        <p style="text-align: center; margin-top: 1rem; font-size: 1.2rem;">
+                            <strong>總屬性值：</strong><span style="color: #ffd700; font-size: 1.5rem;">${char.total_stats || 0}</span>
+                        </p>
+                    </div>
+                    
+                    <!-- 星盤資訊 -->
+                    <div style="background: rgba(6,182,212,0.3); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; color: #ffd700;">🌟 星盤資訊</h3>
+                        <div style="display: grid; gap: 0.5rem;">
+                            <p><strong>☀️ 太陽：</strong>${birthChart.sun || '計算中'}</p>
+                            <p><strong>🌙 月亮：</strong>${birthChart.moon || '計算中'}</p>
+                            <p><strong>⬆️ 上升：</strong>${birthChart.ascendant || '計算中'}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 角色背景 -->
+                    <div style="background: rgba(245,158,11,0.3); border-radius: 10px; padding: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; color: #ffd700;">📖 角色背景故事</h3>
+                        <p style="line-height: 1.8; text-align: justify;">${char.background || '一位神秘的冒險者，準備開啟新的旅程...'}</p>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button onclick="window.print()" 
+                                style="padding: 0.75rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 8px; border: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; cursor: pointer; margin-right: 1rem;">
+                            🖨️ 列印角色卡
+                        </button>
+                        <button onclick="location.reload()" 
+                                style="padding: 0.75rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 8px; border: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; cursor: pointer;">
+                            🔄 重新生成
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            resultContainer.style.display = 'block';
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         // 頁面載入完成後初始化
