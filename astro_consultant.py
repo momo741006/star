@@ -64,8 +64,18 @@ class ProfessionalAstrologer:
         """
         try:
             # 使用AstrologicalSubject API創建占星主體
+            # 直接使用經緯度和時區，避免網路查詢
             chart = kr.AstrologicalSubject(
-                name, year, month, day, hour, minute, city, "TW"
+                name=name, 
+                year=year, 
+                month=month, 
+                day=day, 
+                hour=hour, 
+                minute=minute,
+                lng=longitude,
+                lat=latitude,
+                tz_str=timezone,
+                city=city
             )
             
             # 提取行星數據
