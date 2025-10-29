@@ -17,7 +17,7 @@
       "use": "@vercel/static"
     },
     {
-      "src": "site.webmanifest",
+      "src": "site_webmanifest.json",
       "use": "@vercel/static"
     }
   ],
@@ -32,7 +32,7 @@
     },
     {
       "src": "/site.webmanifest",
-      "dest": "/site.webmanifest"
+      "dest": "/site_webmanifest.json"
     },
     {
       "src": "/",
