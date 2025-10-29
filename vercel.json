@@ -7,6 +7,18 @@
       "config": {
         "maxLambdaSize": "15mb"
       }
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "service_worker.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "site.webmanifest",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -15,8 +27,20 @@
       "dest": "api/index.py"
     },
     {
+      "src": "/service_worker.js",
+      "dest": "/service_worker.js"
+    },
+    {
+      "src": "/site.webmanifest",
+      "dest": "/site.webmanifest"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
       "src": "/(.*)",
-      "dest": "api/index.py"
+      "dest": "/index.html"
     }
   ],
   "env": {

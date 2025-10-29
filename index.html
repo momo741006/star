@@ -527,47 +527,110 @@
             
             const char = result.character;
             const birthChart = char.birth_chart || {};
+            const astroData = result.astro_data || {};
+            const planets = astroData.planets || {};
+            
+            // Build detailed planet information
+            let planetsHTML = '';
+            const planetList = [
+                {key: 'sun', icon: '☀️', name: '太陽'},
+                {key: 'moon', icon: '🌙', name: '月亮'},
+                {key: 'mercury', icon: '☿️', name: '水星'},
+                {key: 'venus', icon: '♀️', name: '金星'},
+                {key: 'mars', icon: '♂️', name: '火星'},
+                {key: 'jupiter', icon: '♃', name: '木星'},
+                {key: 'saturn', icon: '♄', name: '土星'},
+                {key: 'uranus', icon: '♅', name: '天王星'},
+                {key: 'neptune', icon: '♆', name: '海王星'},
+                {key: 'pluto', icon: '♇', name: '冥王星'}
+            ];
+            
+            planetList.forEach(p => {
+                if (planets[p.key]) {
+                    const planet = planets[p.key];
+                    const retrograde = planet.retrograde ? ' ℞' : '';
+                    planetsHTML += `
+                        <div style="background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span><strong>${p.icon} ${planet.name || p.name}：</strong></span>
+                                <span style="color: #60a5fa;">${planet.sign || ''}${retrograde} ${planet.position ? planet.position.toFixed(2) + '°' : ''} 第${planet.house || '?'}宮</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
             
             resultContainer.innerHTML = `
                 <div style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 2rem; border: 2px solid rgba(255,255,255,0.2);">
-                    <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2rem;">✨ 您的專屬角色 ✨</h2>
+                    <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2rem;">✨ 您的命盤解讀 ✨</h2>
+                    <p style="text-align: center; margin-bottom: 2rem; opacity: 0.9; font-size: 0.95rem;">透過D&D角色系統解讀您的占星命盤</p>
                     
-                    <!-- 角色基本資訊 -->
-                    <div style="background: rgba(102,126,234,0.3); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                        <h3 style="margin-bottom: 1rem; color: #ffd700;">🎭 角色資訊</h3>
-                        <p style="font-size: 1.3rem; margin-bottom: 0.5rem;"><strong>姓名：</strong>${char.name}</p>
-                        <p style="font-size: 1.2rem; margin-bottom: 0.5rem;"><strong>職業：</strong>${char.class?.name || '未知'}</p>
-                        <p style="margin-bottom: 0.5rem;"><strong>職業描述：</strong>${char.class?.description || ''}</p>
-                        <p style="font-size: 1.5rem; margin-top: 1rem;"><strong>評級：</strong><span style="color: #ffd700; font-size: 2rem; font-weight: bold;">${char.rating}</span></p>
+                    <!-- 完整星盤計算結果 - 優先顯示 -->
+                    <div style="background: rgba(6,182,212,0.3); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; color: #ffd700;">🌟 本命星盤詳細數據</h3>
+                        <p style="margin-bottom: 1rem; font-size: 0.9rem; opacity: 0.9;">基於瑞士星曆表(Swiss Ephemeris)的精確天文計算</p>
+                        
+                        <!-- 核心三要素 -->
+                        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #ffd700;">
+                            <h4 style="margin-bottom: 0.75rem; color: #ffd700; font-size: 1.1rem;">✨ 命盤核心三要素</h4>
+                            <p style="margin-bottom: 0.5rem;"><strong>☀️ 太陽星座：</strong>${birthChart.sun || '計算中'}</p>
+                            <p style="margin-bottom: 0.5rem;"><strong>🌙 月亮星座：</strong>${birthChart.moon || '計算中'}</p>
+                            <p><strong>⬆️ 上升星座：</strong>${birthChart.ascendant || '計算中'}</p>
+                        </div>
+                        
+                        <!-- 完整行星配置 -->
+                        <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem; color: #ffd700; font-size: 1.1rem;">🪐 十大行星完整配置</h4>
+                        ${planetsHTML || '<p style="opacity: 0.7;">行星數據計算中...</p>'}
                     </div>
                     
-                    <!-- 屬性值 -->
+                    <!-- D&D角色解讀 - 基於星盤 -->
+                    <div style="background: rgba(102,126,234,0.3); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem; color: #ffd700;">🎭 D&D角色解讀</h3>
+                        <p style="margin-bottom: 1rem; font-size: 0.9rem; opacity: 0.9;">將您的星盤特質轉化為D&D角色屬性</p>
+                        
+                        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <p style="font-size: 1.3rem; margin-bottom: 0.5rem;"><strong>姓名：</strong>${char.name}</p>
+                            <p style="font-size: 1.2rem; margin-bottom: 0.5rem;"><strong>職業：</strong>${char.class?.name || '未知'}</p>
+                            <p style="margin-bottom: 0.5rem; opacity: 0.9;"><strong>職業描述：</strong>${char.class?.description || ''}</p>
+                            <p style="font-size: 1.3rem; margin-top: 1rem;"><strong>綜合評級：</strong><span style="color: #ffd700; font-size: 2rem; font-weight: bold; margin-left: 0.5rem;">${char.rating}</span></p>
+                        </div>
+                    </div>
+                    
+                    <!-- D&D屬性對照表 -->
                     <div style="background: rgba(139,92,246,0.3); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                        <h3 style="margin-bottom: 1rem; color: #ffd700;">📊 角色屬性</h3>
+                        <h3 style="margin-bottom: 1rem; color: #ffd700;">📊 星盤轉換D&D屬性</h3>
+                        <p style="margin-bottom: 1rem; font-size: 0.9rem; opacity: 0.9;">根據行星配置計算的六大能力值</p>
+                        
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
                             <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
                                 <div style="font-weight: 600; margin-bottom: 0.5rem;">💪 力量 (STR)</div>
                                 <div style="font-size: 1.5rem; color: #10b981;">${char.stats?.strength || 10}</div>
+                                <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 0.25rem;">火星能量</div>
                             </div>
                             <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
                                 <div style="font-weight: 600; margin-bottom: 0.5rem;">🏃 敏捷 (DEX)</div>
                                 <div style="font-size: 1.5rem; color: #10b981;">${char.stats?.dexterity || 10}</div>
+                                <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 0.25rem;">水星機敏</div>
                             </div>
                             <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
                                 <div style="font-weight: 600; margin-bottom: 0.5rem;">❤️ 體質 (CON)</div>
                                 <div style="font-size: 1.5rem; color: #10b981;">${char.stats?.constitution || 10}</div>
+                                <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 0.25rem;">土星耐力</div>
                             </div>
                             <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
                                 <div style="font-weight: 600; margin-bottom: 0.5rem;">🧠 智力 (INT)</div>
                                 <div style="font-size: 1.5rem; color: #10b981;">${char.stats?.intelligence || 10}</div>
+                                <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 0.25rem;">水星智慧</div>
                             </div>
                             <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
                                 <div style="font-weight: 600; margin-bottom: 0.5rem;">🔮 智慧 (WIS)</div>
                                 <div style="font-size: 1.5rem; color: #10b981;">${char.stats?.wisdom || 10}</div>
+                                <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 0.25rem;">月亮直覺</div>
                             </div>
                             <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
                                 <div style="font-weight: 600; margin-bottom: 0.5rem;">✨ 魅力 (CHA)</div>
                                 <div style="font-size: 1.5rem; color: #10b981;">${char.stats?.charisma || 10}</div>
+                                <div style="font-size: 0.8rem; opacity: 0.7; margin-top: 0.25rem;">金星魅力</div>
                             </div>
                         </div>
                         <p style="text-align: center; margin-top: 1rem; font-size: 1.2rem;">
@@ -575,30 +638,20 @@
                         </p>
                     </div>
                     
-                    <!-- 星盤資訊 -->
-                    <div style="background: rgba(6,182,212,0.3); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                        <h3 style="margin-bottom: 1rem; color: #ffd700;">🌟 星盤資訊</h3>
-                        <div style="display: grid; gap: 0.5rem;">
-                            <p><strong>☀️ 太陽：</strong>${birthChart.sun || '計算中'}</p>
-                            <p><strong>🌙 月亮：</strong>${birthChart.moon || '計算中'}</p>
-                            <p><strong>⬆️ 上升：</strong>${birthChart.ascendant || '計算中'}</p>
-                        </div>
-                    </div>
-                    
-                    <!-- 角色背景 -->
+                    <!-- 角色背景故事 -->
                     <div style="background: rgba(245,158,11,0.3); border-radius: 10px; padding: 1.5rem;">
-                        <h3 style="margin-bottom: 1rem; color: #ffd700;">📖 角色背景故事</h3>
+                        <h3 style="margin-bottom: 1rem; color: #ffd700;">📖 命盤敘事解讀</h3>
                         <p style="line-height: 1.8; text-align: justify;">${char.background || '一位神秘的冒險者，準備開啟新的旅程...'}</p>
                     </div>
                     
                     <div style="text-align: center; margin-top: 2rem;">
                         <button onclick="window.print()" 
                                 style="padding: 0.75rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 8px; border: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; cursor: pointer; margin-right: 1rem;">
-                            🖨️ 列印角色卡
+                            🖨️ 列印命盤報告
                         </button>
                         <button onclick="location.reload()" 
                                 style="padding: 0.75rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 8px; border: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; cursor: pointer;">
-                            🔄 重新生成
+                            🔄 重新測算
                         </button>
                     </div>
                 </div>
