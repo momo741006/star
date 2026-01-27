@@ -30,6 +30,30 @@ class ProfessionalAstrologer:
             'Uranus': '天王星', 'Neptune': '海王星', 'Pluto': '冥王星'
         }
         
+        # 額外點位名稱
+        self.additional_points_names = {
+            'Chiron': '凱龍',
+            'True_North_Lunar_Node': '北交',
+            'True_South_Lunar_Node': '南交',
+            'Ascendant': '上升',
+            'Medium_Coeli': '天頂',
+            'Descendant': '下降',
+            'Imum_Coeli': '天底'
+        }
+        
+        # 相位名稱
+        self.aspect_names = {
+            'conjunction': '合相',
+            'opposition': '對分相',
+            'trine': '三分相',
+            'square': '四分相',
+            'sextile': '六分相',
+            'quincunx': '補十二分相',
+            'semi_sextile': '十二分相',
+            'semi_square': '八分相',
+            'sesquiquadrate': '補八分相'
+        }
+        
         # 星座元素和性質
         self.elements = {
             'Ari': '火', 'Leo': '火', 'Sag': '火',
@@ -43,6 +67,26 @@ class ProfessionalAstrologer:
             'Tau': '固定', 'Leo': '固定', 'Sco': '固定', 'Aqu': '固定',
             'Gem': '變動', 'Vir': '變動', 'Sag': '變動', 'Pis': '變動'
         }
+    
+    def _convert_to_dms(self, decimal_degrees: float) -> str:
+        """
+        將十進制度數轉換為度分秒格式
+        
+        Args:
+            decimal_degrees: 十進制度數
+            
+        Returns:
+            度分秒格式字符串，例如: "13°09'11\""
+        """
+        # 取整數度
+        degrees = int(decimal_degrees)
+        # 計算分
+        minutes_decimal = (decimal_degrees - degrees) * 60
+        minutes = int(minutes_decimal)
+        # 計算秒
+        seconds = (minutes_decimal - minutes) * 60
+        
+        return f"{degrees:02d}°{minutes:02d}'{seconds:02.0f}\""
     
     def calculate_natal_chart(self, name: str, year: int, month: int, day: int, 
                             hour: int, minute: int, city: str, 
@@ -94,9 +138,49 @@ class ProfessionalAstrologer:
                     'sign_code': planet_data.sign,
                     'house': self._get_house_number(planet_data.house),
                     'position': round(planet_data.position, 2),
+                    'position_dms': self._convert_to_dms(planet_data.position),
                     'retrograde': planet_data.retrograde,
                     'element': self.elements.get(planet_data.sign, '未知'),
                     'quality': self.qualities.get(planet_data.sign, '未知')
+                }
+            
+            # 提取額外點位數據（凱龍、北交、南交等）
+            additional_points = {}
+            
+            # 凱龍
+            if hasattr(chart, 'chiron') and chart.chiron:
+                additional_points['chiron'] = {
+                    'name': '凱龍',
+                    'sign': self.sign_names.get(chart.chiron.sign, chart.chiron.sign),
+                    'sign_code': chart.chiron.sign,
+                    'house': self._get_house_number(chart.chiron.house),
+                    'position': round(chart.chiron.position, 2),
+                    'position_dms': self._convert_to_dms(chart.chiron.position),
+                    'retrograde': chart.chiron.retrograde
+                }
+            
+            # 北交點（真實）
+            if hasattr(chart, 'true_north_lunar_node') and chart.true_north_lunar_node:
+                additional_points['north_node'] = {
+                    'name': '北交',
+                    'sign': self.sign_names.get(chart.true_north_lunar_node.sign, chart.true_north_lunar_node.sign),
+                    'sign_code': chart.true_north_lunar_node.sign,
+                    'house': self._get_house_number(chart.true_north_lunar_node.house),
+                    'position': round(chart.true_north_lunar_node.position, 2),
+                    'position_dms': self._convert_to_dms(chart.true_north_lunar_node.position),
+                    'retrograde': False
+                }
+            
+            # 南交點（真實）
+            if hasattr(chart, 'true_south_lunar_node') and chart.true_south_lunar_node:
+                additional_points['south_node'] = {
+                    'name': '南交',
+                    'sign': self.sign_names.get(chart.true_south_lunar_node.sign, chart.true_south_lunar_node.sign),
+                    'sign_code': chart.true_south_lunar_node.sign,
+                    'house': self._get_house_number(chart.true_south_lunar_node.house),
+                    'position': round(chart.true_south_lunar_node.position, 2),
+                    'position_dms': self._convert_to_dms(chart.true_south_lunar_node.position),
+                    'retrograde': False
                 }
             
             # 提取宮位數據
@@ -119,17 +203,45 @@ class ProfessionalAstrologer:
                     'quality': self.qualities.get(house_data.sign, '未知')
                 }
             
-            # 計算重要點位
+            # 計算重要點位（四軸）
             angles = {
                 'ascendant': {
+                    'name': '上升',
                     'sign': self.sign_names.get(chart.ascendant.sign, chart.ascendant.sign),
-                    'position': round(chart.ascendant.position, 2)
+                    'position': round(chart.ascendant.position, 2),
+                    'position_dms': self._convert_to_dms(chart.ascendant.position),
+                    'house': 1
                 },
                 'midheaven': {
+                    'name': '天頂',
                     'sign': self.sign_names.get(chart.medium_coeli.sign, chart.medium_coeli.sign),
-                    'position': round(chart.medium_coeli.position, 2)
+                    'position': round(chart.medium_coeli.position, 2),
+                    'position_dms': self._convert_to_dms(chart.medium_coeli.position),
+                    'house': 10
                 }
             }
+            
+            # 添加下降點和天底
+            if hasattr(chart, 'descendant') and chart.descendant:
+                angles['descendant'] = {
+                    'name': '下降',
+                    'sign': self.sign_names.get(chart.descendant.sign, chart.descendant.sign),
+                    'position': round(chart.descendant.position, 2),
+                    'position_dms': self._convert_to_dms(chart.descendant.position),
+                    'house': 7
+                }
+            
+            if hasattr(chart, 'imum_coeli') and chart.imum_coeli:
+                angles['imum_coeli'] = {
+                    'name': '天底',
+                    'sign': self.sign_names.get(chart.imum_coeli.sign, chart.imum_coeli.sign),
+                    'position': round(chart.imum_coeli.position, 2),
+                    'position_dms': self._convert_to_dms(chart.imum_coeli.position),
+                    'house': 4
+                }
+            
+            # 計算相位
+            aspects = self._calculate_aspects(chart)
             
             return {
                 'birth_info': {
@@ -142,6 +254,8 @@ class ProfessionalAstrologer:
                 'planets': planets_data,
                 'houses': houses_data,
                 'angles': angles,
+                'additional_points': additional_points,
+                'aspects': aspects,
                 'chart_object': chart
             }
             
@@ -156,6 +270,58 @@ class ProfessionalAstrologer:
             'Ninth_House': 9, 'Tenth_House': 10, 'Eleventh_House': 11, 'Twelfth_House': 12
         }
         return house_mapping.get(str(house_enum), 0)
+    
+    def _calculate_aspects(self, chart) -> List[Dict]:
+        """
+        計算星盤中的相位
+        
+        Args:
+            chart: Kerykeion AstrologicalSubject 對象
+            
+        Returns:
+            相位列表
+        """
+        try:
+            from kerykeion import NatalAspects
+            
+            # 使用 Kerykeion 的相位計算功能
+            aspects_obj = NatalAspects(chart)
+            
+            # 處理相位數據
+            aspects_list = []
+            
+            if hasattr(aspects_obj, 'relevant_aspects'):
+                for aspect in aspects_obj.relevant_aspects:
+                    # 轉換行星名稱為中文
+                    p1_name_zh = self.planet_names.get(aspect.p1_name, aspect.p1_name)
+                    p2_name_zh = self.planet_names.get(aspect.p2_name, aspect.p2_name)
+                    
+                    # 處理額外點位名稱
+                    if aspect.p1_name not in self.planet_names:
+                        p1_name_zh = self.additional_points_names.get(aspect.p1_name, aspect.p1_name)
+                    if aspect.p2_name not in self.planet_names:
+                        p2_name_zh = self.additional_points_names.get(aspect.p2_name, aspect.p2_name)
+                    
+                    # 相位名稱中文化
+                    aspect_name_zh = self.aspect_names.get(aspect.aspect, aspect.aspect)
+                    
+                    aspects_list.append({
+                        'planet1': p1_name_zh,
+                        'planet1_en': aspect.p1_name,
+                        'planet2': p2_name_zh,
+                        'planet2_en': aspect.p2_name,
+                        'aspect': aspect_name_zh,
+                        'aspect_en': aspect.aspect,
+                        'orb': round(aspect.orbit, 2),
+                        'aspect_degrees': aspect.aspect_degrees,
+                        'applying': aspect.aspect_movement == 'Applying'
+                    })
+            
+            return aspects_list
+            
+        except Exception as e:
+            # 如果相位計算失敗，返回空列表
+            return []
     
     def analyze_chart_psychology(self, chart_data: Dict) -> Dict:
         """

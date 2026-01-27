@@ -591,7 +591,9 @@ def calculate_with_real_engine(data):
         'astro_data': {
             'planets': chart_data['planets'],
             'houses': chart_data['houses'],
-            'angles': chart_data['angles']
+            'angles': chart_data['angles'],
+            'additional_points': chart_data.get('additional_points', {}),
+            'aspects': chart_data.get('aspects', [])
         }
     }
 
