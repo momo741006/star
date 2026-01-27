@@ -51,6 +51,9 @@ app_start_time = datetime.now()
 request_count = 0
 error_count = 0
 
+# 常數定義
+MAX_DISPLAYED_ASPECTS = 30  # 格式化輸出時顯示的最大相位數量
+
 # 嘗試導入真實的占星計算引擎
 try:
     from astro_consultant import ProfessionalAstrologer
@@ -317,7 +320,31 @@ curl -X POST {{ base_url }}/api/calculate_chart \
     }
   },
   "astro_data": {
-    "planets": { /* 詳細行星數據 */ },
+    "planets": {
+      "sun": {
+        "name": "太陽",
+        "sign": "天秤座",
+        "position": 13.15,
+        "position_dms": "13°09'12\"",
+        "house": 6,
+        "retrograde": false
+      }
+      /* ... 其他行星 ... */
+    },
+    "additional_points": {
+      "chiron": { /* 凱龍 */ },
+      "north_node": { /* 北交點 */ },
+      "south_node": { /* 南交點 */ }
+    },
+    "angles": {
+      "ascendant": { /* 上升 */ },
+      "midheaven": { /* 天頂 */ },
+      "descendant": { /* 下降 */ },
+      "imum_coeli": { /* 天底 */ }
+    },
+    "aspects": [
+      /* 行星相位列表 */
+    ],
     "houses": { /* 宮位資訊 */ }
   },
   "metadata": {
@@ -337,6 +364,80 @@ curl -X POST {{ base_url }}/api/calculate_chart \
   "details": {
     "field": "year",
     "message": "年份必須在1900-2050之間"
+  }
+}
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <strong>/api/formatted_chart</strong>
+                <p>格式化星盤顯示 - 返回易讀的文字格式，包含完整的行星位置（度分秒）、額外點位、四軸和相位</p>
+
+                <h4>📝 請求參數</h4>
+                <div class="code">
+{
+  "name": "string",        // 必填 - 姓名
+  "year": "integer",       // 必填 - 出生年份
+  "month": "integer",      // 必填 - 出生月份
+  "day": "integer",        // 必填 - 出生日期
+  "hour": "integer",       // 必填 - 出生時間-時
+  "minute": "integer",     // 必填 - 出生時間-分
+  "city": "string",        // 必填 - 出生城市
+  "longitude": "float",    // 必填 - 經度
+  "latitude": "float",     // 必填 - 緯度
+  "timezone": "string"     // 選填 - 時區
+}
+                </div>
+
+                <h4>✅ 成功回應</h4>
+                <div class="code">
+{
+  "success": true,
+  "formatted_text": "格式化的星盤文字報告...",
+  "data": {
+    "planets": {
+      "sun": {
+        "name": "太陽",
+        "sign": "天秤座",
+        "position_dms": "13°09'12\"",
+        "house": 6,
+        "retrograde": false
+      }
+      /* ... 其他行星 ... */
+    },
+    "additional_points": {
+      "chiron": {
+        "name": "凱龍",
+        "sign": "雙子座",
+        "position_dms": "14°31'32\"",
+        "house": 1,
+        "retrograde": true
+      },
+      "north_node": { /* 北交點 */ },
+      "south_node": { /* 南交點 */ }
+    },
+    "angles": {
+      "ascendant": { /* 上升 */ },
+      "midheaven": { /* 天頂 */ },
+      "descendant": { /* 下降 */ },
+      "imum_coeli": { /* 天底 */ }
+    },
+    "aspects": [
+      {
+        "planet1": "太陽",
+        "planet2": "水星",
+        "aspect": "合相",
+        "orb": 10.0,
+        "applying": false
+      }
+      /* ... 其他相位 ... */
+    ]
+  },
+  "metadata": {
+    "calculation_time": 0.123,
+    "engine": "Kerykeion",
+    "timestamp": "2025-08-25T01:00:00Z"
   }
 }
                 </div>
@@ -591,7 +692,9 @@ def calculate_with_real_engine(data):
         'astro_data': {
             'planets': chart_data['planets'],
             'houses': chart_data['houses'],
-            'angles': chart_data['angles']
+            'angles': chart_data['angles'],
+            'additional_points': chart_data.get('additional_points', {}),
+            'aspects': chart_data.get('aspects', [])
         }
     }
 
@@ -727,6 +830,124 @@ def test_system():
             'test_passed': False,
             'error': '系統測試失敗',
             'error_details': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/formatted_chart', methods=['POST'])
+def formatted_chart():
+    """
+    🌟 格式化星盤顯示 - 返回易讀的文字格式
+    """
+    start_time = time.time()
+    
+    try:
+        # 驗證請求
+        if not request.is_json:
+            return jsonify({
+                'success': False,
+                'error': '請求必須是JSON格式',
+                'error_code': 'INVALID_CONTENT_TYPE'
+            }), 400
+        
+        data = request.get_json()
+        
+        # 執行計算
+        if USE_REAL_ASTRO:
+            chart_data = astrologer.calculate_natal_chart(
+                data.get('name', '匿名'),
+                int(data['year']), 
+                int(data['month']), 
+                int(data['day']),
+                int(data['hour']), 
+                int(data['minute']), 
+                data.get('city', '未知'),
+                float(data['longitude']), 
+                float(data['latitude']), 
+                data.get('timezone', 'Asia/Taipei')
+            )
+            
+            # 格式化輸出
+            formatted_text = []
+            formatted_text.append("=" * 80)
+            formatted_text.append(f"星盤報告 - {data.get('name', '匿名')}")
+            formatted_text.append("=" * 80)
+            formatted_text.append("")
+            
+            # 行星位置
+            formatted_text.append("【行星位置】")
+            formatted_text.append("-" * 80)
+            for key in ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto']:
+                if key in chart_data['planets']:
+                    p = chart_data['planets'][key]
+                    retro = "℞" if p['retrograde'] else ""
+                    formatted_text.append(f"{p['name']:<6} {p['sign']:<8} {p['position_dms']:<15} {p['house']:>2}宮 {retro}")
+            formatted_text.append("")
+            
+            # 額外點位
+            if 'additional_points' in chart_data and chart_data['additional_points']:
+                formatted_text.append("【額外點位】")
+                formatted_text.append("-" * 80)
+                for key, point in chart_data['additional_points'].items():
+                    retro = "℞" if point.get('retrograde', False) else ""
+                    formatted_text.append(f"{point['name']:<6} {point['sign']:<8} {point['position_dms']:<15} {point['house']:>2}宮 {retro}")
+                formatted_text.append("")
+            
+            # 四軸
+            formatted_text.append("【四軸點位】")
+            formatted_text.append("-" * 80)
+            for key in ['ascendant', 'midheaven', 'descendant', 'imum_coeli']:
+                if key in chart_data['angles']:
+                    a = chart_data['angles'][key]
+                    formatted_text.append(f"{a['name']:<6} {a['sign']:<8} {a['position_dms']:<15} {a['house']:>2}宮")
+            formatted_text.append("")
+            
+            # 相位
+            aspects = chart_data.get('aspects', [])
+            formatted_text.append(f"【相位】（共{len(aspects)}個）")
+            formatted_text.append("-" * 80)
+            for i, aspect in enumerate(aspects[:MAX_DISPLAYED_ASPECTS]):
+                applying = "入相" if aspect.get('applying', False) else "出相"
+                formatted_text.append(f"{i+1:2}. {aspect['planet1']:<8} {aspect['aspect']:<10} {aspect['planet2']:<8} (容許度: {aspect['orb']:>5.2f}° - {applying})")
+            if len(aspects) > MAX_DISPLAYED_ASPECTS:
+                formatted_text.append(f"... 還有 {len(aspects) - MAX_DISPLAYED_ASPECTS} 個相位未顯示")
+            formatted_text.append("")
+            
+            formatted_text.append("=" * 80)
+            
+            calculation_time = time.time() - start_time
+            
+            return jsonify({
+                'success': True,
+                'formatted_text': '\n'.join(formatted_text),
+                'data': {
+                    'planets': chart_data['planets'],
+                    'additional_points': chart_data.get('additional_points', {}),
+                    'angles': chart_data['angles'],
+                    'aspects': aspects
+                },
+                'metadata': {
+                    'calculation_time': round(calculation_time, 3),
+                    'engine': ENGINE_STATUS,
+                    'timestamp': datetime.now().isoformat()
+                }
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': '真實占星引擎未啟用',
+                'error_code': 'ENGINE_NOT_AVAILABLE'
+            }), 503
+            
+    except Exception as e:
+        calculation_time = time.time() - start_time
+        logger.error(f"格式化星盤失敗: {str(e)}")
+        
+        return jsonify({
+            'success': False,
+            'error': '格式化星盤過程中發生錯誤',
+            'error_code': 'FORMATTING_ERROR',
+            'details': str(e) if app.debug else '內部錯誤',
+            'calculation_time': round(calculation_time, 3),
             'timestamp': datetime.now().isoformat()
         }), 500
 
