@@ -4,6 +4,11 @@
 
 ### 最簡單的調用方式
 
+> ⚠️ **注意**：請將示例中的 `https://your-domain.com` 替換為您實際部署的API地址
+> - 本地開發：`http://localhost:5000`
+> - Vercel：`https://your-project.vercel.app`
+> - Railway：`https://your-app.railway.app`
+
 ```javascript
 // 1. 發送請求
 const response = await fetch('https://your-domain.com/api/calculate_chart', {

@@ -8,7 +8,14 @@
 
 ### API 基礎信息
 
-- **API 基礎URL**: `https://your-domain.com/api`
+- **API 基礎URL**: `https://your-domain.com/api` 
+  
+  > ⚠️ **重要**：請將 `your-domain.com` 替換為您實際部署的域名
+  > 
+  > - 本地開發：`http://localhost:5000/api`
+  > - Vercel部署：`https://your-project.vercel.app/api`
+  > - Railway部署：`https://your-app.railway.app/api`
+
 - **支持格式**: JSON
 - **字符編碼**: UTF-8
 - **CORS**: ✅ 已啟用，支持跨域請求

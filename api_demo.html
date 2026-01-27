@@ -509,6 +509,11 @@ if ($data['success']) {
     </div>
 
     <script>
+        // API配置 - 根據環境自動切換
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000' 
+            : window.location.origin;
+        
         // Tab切換功能
         function switchTab(tabName) {
             // 隱藏所有內容
@@ -561,7 +566,7 @@ if ($data['success']) {
             submitBtn.textContent = '⏳ 計算中...';
             
             try {
-                const response = await fetch('http://localhost:5000/api/calculate_chart', {
+                const response = await fetch(`${API_BASE_URL}/api/calculate_chart`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

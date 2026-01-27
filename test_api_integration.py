@@ -8,9 +8,10 @@
 import requests
 import json
 import sys
+import os
 
-# API基礎URL（請根據實際部署修改）
-API_BASE_URL = "http://localhost:5000"
+# API基礎URL（可通過環境變量配置）
+API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:5000")
 
 def test_health_check():
     """測試健康檢查端點"""
