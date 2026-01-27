@@ -76,17 +76,26 @@ class ProfessionalAstrologer:
             decimal_degrees: 十進制度數
             
         Returns:
-            度分秒格式字符串，例如: "13°09'11\""
+            度分秒格式字符串，例如: "13°09'12""
         """
         # 取整數度
         degrees = int(decimal_degrees)
         # 計算分
         minutes_decimal = (decimal_degrees - degrees) * 60
         minutes = int(minutes_decimal)
-        # 計算秒
-        seconds = (minutes_decimal - minutes) * 60
+        # 計算秒並四捨五入
+        seconds_decimal = (minutes_decimal - minutes) * 60
+        seconds = int(round(seconds_decimal))
         
-        return f"{degrees:02d}°{minutes:02d}'{seconds:02.0f}\""
+        # 處理秒數進位
+        if seconds >= 60:
+            seconds = 0
+            minutes += 1
+        if minutes >= 60:
+            minutes = 0
+            degrees += 1
+        
+        return f"{degrees:02d}°{minutes:02d}'{seconds:02d}\""
     
     def calculate_natal_chart(self, name: str, year: int, month: int, day: int, 
                             hour: int, minute: int, city: str, 

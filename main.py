@@ -51,6 +51,9 @@ app_start_time = datetime.now()
 request_count = 0
 error_count = 0
 
+# 常數定義
+MAX_DISPLAYED_ASPECTS = 30  # 格式化輸出時顯示的最大相位數量
+
 # 嘗試導入真實的占星計算引擎
 try:
     from astro_consultant import ProfessionalAstrologer
@@ -902,11 +905,11 @@ def formatted_chart():
             aspects = chart_data.get('aspects', [])
             formatted_text.append(f"【相位】（共{len(aspects)}個）")
             formatted_text.append("-" * 80)
-            for i, aspect in enumerate(aspects[:30]):  # 顯示前30個
+            for i, aspect in enumerate(aspects[:MAX_DISPLAYED_ASPECTS]):
                 applying = "入相" if aspect.get('applying', False) else "出相"
                 formatted_text.append(f"{i+1:2}. {aspect['planet1']:<8} {aspect['aspect']:<10} {aspect['planet2']:<8} (容許度: {aspect['orb']:>5.2f}° - {applying})")
-            if len(aspects) > 30:
-                formatted_text.append(f"... 還有 {len(aspects) - 30} 個相位未顯示")
+            if len(aspects) > MAX_DISPLAYED_ASPECTS:
+                formatted_text.append(f"... 還有 {len(aspects) - MAX_DISPLAYED_ASPECTS} 個相位未顯示")
             formatted_text.append("")
             
             formatted_text.append("=" * 80)
