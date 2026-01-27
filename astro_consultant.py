@@ -301,15 +301,15 @@ class ProfessionalAstrologer:
             
             if hasattr(aspects_obj, 'relevant_aspects'):
                 for aspect in aspects_obj.relevant_aspects:
-                    # 轉換行星名稱為中文
-                    p1_name_zh = self.planet_names.get(aspect.p1_name, aspect.p1_name)
-                    p2_name_zh = self.planet_names.get(aspect.p2_name, aspect.p2_name)
-                    
-                    # 處理額外點位名稱
-                    if aspect.p1_name not in self.planet_names:
-                        p1_name_zh = self.additional_points_names.get(aspect.p1_name, aspect.p1_name)
-                    if aspect.p2_name not in self.planet_names:
-                        p2_name_zh = self.additional_points_names.get(aspect.p2_name, aspect.p2_name)
+                    # 行星與額外點位名稱轉換為中文（先查行星，再查額外點位，最後回退原名）
+                    p1_name_zh = (
+                        self.planet_names.get(aspect.p1_name)
+                        or self.additional_points_names.get(aspect.p1_name, aspect.p1_name)
+                    )
+                    p2_name_zh = (
+                        self.planet_names.get(aspect.p2_name)
+                        or self.additional_points_names.get(aspect.p2_name, aspect.p2_name)
+                    )
                     
                     # 相位名稱中文化
                     aspect_name_zh = self.aspect_names.get(aspect.aspect, aspect.aspect)
